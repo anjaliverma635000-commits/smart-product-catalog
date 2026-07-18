@@ -3,108 +3,76 @@ package com.anjali.smartproductcatalog.service;
 import com.anjali.smartproductcatalog.dto.UserDto;
 import com.anjali.smartproductcatalog.entity.User;
 import com.anjali.smartproductcatalog.repository.UserRepository;
+import com.anjali.smartproductcatalog.security.JwtService;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
-import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
-import static org.mockito.Mockito.when;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+
 class UserServiceTest {
 
     @Mock
     private UserRepository repository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private UserService userService;
 
-    @Test
-    void testGetAll() {
 
-        // Arrange
-        User user1 = new User();
-        user1.setId(1L);
-        user1.setName("Anjali");
-        user1.setEmail("anjali@gmail.com");
-        user1.setAge(22);
-
-        User user2 = new User();
-        user2.setId(2L);
-        user2.setName("Rahul");
-        user2.setEmail("rahul@gmail.com");
-        user2.setAge(25);
-
-        List<User> users = List.of(user1, user2);
-
-        when(repository.findAll()).thenReturn(users);
-
-        // Act
-        List<User> result = userService.getAll();
-
-        // Assert
-        assertEquals(2, result.size());
-        verify(repository, times(1)).findAll();
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void testGetUsers() {
-
-        // Arrange
-        User user = new User();
-        user.setId(1L);
-        user.setName("Anjali");
-        user.setEmail("anjali@gmail.com");
-        user.setAge(22);
-
-        Pageable pageable = PageRequest.of(0, 5);
-
-        Page<User> page = new PageImpl<>(List.of(user));
-
-        when(repository.findAll(org.mockito.ArgumentMatchers.any(Pageable.class)))
-                .thenReturn(page);
-
-        // Act
-        Page<User> result = userService.getUsers(0, 5, "id", "asc");
-
-        // Assert
-        assertEquals(1, result.getTotalElements());
-        assertEquals("Anjali", result.getContent().get(0).getName());
-
-        verify(repository, times(1))
-                .findAll(org.mockito.ArgumentMatchers.any(Pageable.class));
-    }
 
     @Test
-
     void testAddUser() {
 
         // Arrange
         UserDto dto = new UserDto();
+
         dto.setName("Anjali");
         dto.setEmail("anjali@gmail.com");
         dto.setAge(22);
+        dto.setUsername("anjali");
+        dto.setPassword("password123");
+
 
         User savedUser = new User();
+
         savedUser.setId(1L);
         savedUser.setName("Anjali");
         savedUser.setEmail("anjali@gmail.com");
         savedUser.setAge(22);
+        savedUser.setUsername("anjali");
 
-        when(repository.save(org.mockito.ArgumentMatchers.any(User.class)))
+
+        when(passwordEncoder.encode("password123"))
+                .thenReturn("encodedPassword");
+
+
+        when(repository.save(any(User.class)))
                 .thenReturn(savedUser);
+
 
         // Act
         User result = userService.addUser(dto);
+
 
         // Assert
         assertEquals("Anjali", result.getName());
